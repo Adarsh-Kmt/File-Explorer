@@ -12,6 +12,6 @@ import org.springframework.http.HttpStatus;
 @NoArgsConstructor
 public class SuccessResponse extends CustomResponse{
 
-    private String successMessage;
-    private HttpStatus httpStatus;
+    public String successMessage;
+    public HttpStatus httpStatus;
 }

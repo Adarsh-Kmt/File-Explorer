@@ -1,5 +1,8 @@
 package kamathadarsh.FileExplorer.JOOQRepository;
 
+import kamathadarsh.Conduit.jooq.jooqGenerated.tables.records.FileTableRecord;
+import kamathadarsh.Conduit.jooq.jooqGenerated.tables.records.FolderTableRecord;
+
 import kamathadarsh.FileExplorer.service.FolderService;
 import lombok.AllArgsConstructor;
 import org.jooq.DSLContext;
@@ -57,6 +60,28 @@ public class JOOQFolderRepository {
                 .where(FOLDER_TABLE.FOLDER_ID.eq(folderId))
                 .execute();
     }
+
+    public List<FolderTableRecord> allSubFolderPathsInFolder(int parentFolderId){
+
+        List<FolderTableRecord> subFolderList = dslContext.select(FOLDER_TABLE.FOLDER_NAME, FOLDER_TABLE.FOLDER_ID)
+                .from(FOLDER_TABLE)
+                .where(FOLDER_TABLE.PARENT_FOLDER_ID.eq(parentFolderId))
+                .fetchInto(FolderTableRecord.class);
+
+        return subFolderList;
+    }
+
+
+    public List<String> allSubFolderNamesInFolder(int folderId){
+
+        return dslContext.select(FOLDER_TABLE.FOLDER_NAME)
+                .from(FOLDER_TABLE)
+                .where(FOLDER_TABLE.PARENT_FOLDER_ID.eq(folderId))
+                .fetchInto(String.class);
+    }
+
+
+
 }
 
 

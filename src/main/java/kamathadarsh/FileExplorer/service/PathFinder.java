@@ -1,7 +1,6 @@
 package kamathadarsh.FileExplorer.service;
 
 import kamathadarsh.Conduit.jooq.jooqGenerated.tables.records.FolderTableRecord;
-import kamathadarsh.FileExplorer.DTO.FolderPathDTO;
 import kamathadarsh.FileExplorer.JOOQRepository.JOOQFileRepository;
 import kamathadarsh.FileExplorer.JOOQRepository.JOOQFolderRepository;
 import lombok.AllArgsConstructor;

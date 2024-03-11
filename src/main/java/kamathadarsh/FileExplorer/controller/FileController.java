@@ -1,14 +1,15 @@
 package kamathadarsh.FileExplorer.controller;
 
+import kamathadarsh.FileExplorer.request.CopyPasteRequest;
 import kamathadarsh.FileExplorer.request.CreateFileRequest;
 import kamathadarsh.FileExplorer.response.CustomResponse;
 import kamathadarsh.FileExplorer.response.FailureResponse;
 import kamathadarsh.FileExplorer.service.FileService;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @AllArgsConstructor
@@ -31,6 +32,7 @@ public class FileController {
 
         CustomResponse responseToRequest = fileService.readFile(fileName);
 
+        System.out.println(responseToRequest.toString());
         HttpStatus statusOfRequest = (responseToRequest instanceof FailureResponse) ? HttpStatus.FORBIDDEN: HttpStatus.OK;
 
         return ResponseEntity.status(statusOfRequest).body(responseToRequest);
@@ -45,6 +47,38 @@ public class FileController {
 
         return ResponseEntity.status(statusOfRequest).body(responseToRequest);
     }
+
+    @GetMapping("/app/file/getFilePath/{folderName}/{fileName}")
+    public ResponseEntity<CustomResponse> getFilePath(@PathVariable("fileName") String fileName,
+                                                      @PathVariable("folderName") String folderName){
+
+        CustomResponse responseToRequest = fileService.getFilePath(fileName, folderName);
+
+        HttpStatus statusOfRequest = (responseToRequest instanceof FailureResponse) ? HttpStatus.FORBIDDEN: HttpStatus.OK;
+
+        return ResponseEntity.status(statusOfRequest).body(responseToRequest);
+    }
+
+    @PostMapping("/app/file/copyPaste")
+    public ResponseEntity<CustomResponse> copyPaste(@RequestBody CopyPasteRequest copyPasteRequest){
+
+        CustomResponse responseToRequest = fileService.copyPasteFile(copyPasteRequest);
+
+        HttpStatus statusOfRequest = HttpStatus.OK;
+
+        if(responseToRequest instanceof FailureResponse){
+
+            if(((FailureResponse) responseToRequest).getErrorStatus().isSameCodeAs(HttpStatus.CONFLICT)){
+
+                statusOfRequest = HttpStatus.CONFLICT;
+            }
+            else statusOfRequest = HttpStatus.NOT_FOUND;
+        }
+
+        return ResponseEntity.status(statusOfRequest).body(responseToRequest);
+
+    }
+
 
 
 }

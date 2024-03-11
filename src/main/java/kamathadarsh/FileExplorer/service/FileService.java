@@ -34,7 +34,7 @@ public class FileService {
 
         boolean fileExists = fileRepository.checkIfFileExistsInCurrentFolder(createFileRequest.getFileName(), FolderService.currentFolderId);
 
-        if(!fileExists){
+        if(fileExists){
 
             return FailureResponse.builder()
                     .errorString("file with name " + createFileRequest.getFileName() + " already exists in current folder")
@@ -43,6 +43,9 @@ public class FileService {
         }
 
         String owner_username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+
         fileRepository.createFile(createFileRequest, owner_username);
 
         String filePath = pathFinder.determinePathFromRootFolder(createFileRequest.getFileName(), FolderService.currentFolderId);
@@ -98,6 +101,9 @@ public class FileService {
         }
 
         String ownerGroup = userRepository.getGroupName(ownerUsername);
+
+        System.out.println("current users group " + currentUserGroup);
+        System.out.println("owner group: " + ownerGroup);
 
         if(currentUserGroup.equals(ownerGroup)){
 

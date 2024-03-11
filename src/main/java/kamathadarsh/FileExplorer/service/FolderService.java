@@ -1,12 +1,19 @@
 package kamathadarsh.FileExplorer.service;
 
+import kamathadarsh.Conduit.jooq.jooqGenerated.tables.records.FileTableRecord;
+import kamathadarsh.Conduit.jooq.jooqGenerated.tables.records.FolderTableRecord;
+import kamathadarsh.FileExplorer.DTO.FileDTO;
+import kamathadarsh.FileExplorer.DTO.FolderContentsDTO;
 import kamathadarsh.FileExplorer.JOOQRepository.JOOQFileRepository;
 import kamathadarsh.FileExplorer.JOOQRepository.JOOQFolderRepository;
+import kamathadarsh.FileExplorer.JOOQRepository.JOOQUserRepository;
 import kamathadarsh.FileExplorer.response.CustomResponse;
 import kamathadarsh.FileExplorer.response.FailureResponse;
+import kamathadarsh.FileExplorer.response.FolderContentResponse;
 import kamathadarsh.FileExplorer.response.SuccessResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,6 +26,7 @@ public class FolderService {
 
     private final JOOQFolderRepository folderRepository;
 
+    private final JOOQUserRepository userRepository;
     private final JOOQFileRepository fileRepository;
     public CustomResponse changeDirectory(String folderName){
 
@@ -107,5 +115,39 @@ public class FolderService {
     }
 
 
+    public CustomResponse listContentsInFolder(String folderName){
+
+        Optional<Integer> folderExists = folderRepository.findFolder(folderName);
+
+        if(folderExists.isEmpty()){
+            return FailureResponse.builder()
+                    .errorString("folder with name " + folderName + " not found.")
+                    .errorStatus(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+
+        int folderId = folderExists.get();
+        List<String> allSubFolders = folderRepository.allSubFolderNamesInFolder(folderId);
+
+
+        List<FileTableRecord> allFiles = fileRepository.getAllFilesInFolder(folderId);
+
+        List<FileDTO> allFileDTOs = new ArrayList<>();
+
+        for(FileTableRecord file : allFiles){
+
+            String ownerGroupName = userRepository.getGroupName(file.getOwner());
+            FileDTO fileDTO = new FileDTO(file, ownerGroupName);
+            allFileDTOs.add(fileDTO);
+        }
+
+        FolderContentsDTO folderContentsDTO = new FolderContentsDTO(allFileDTOs, allSubFolders);
+        FolderContentResponse folderContentResponse = new FolderContentResponse(folderContentsDTO, HttpStatus.OK);
+
+        return folderContentResponse;
+
+
+
+    }
 
 }

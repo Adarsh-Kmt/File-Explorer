@@ -49,4 +49,15 @@ public class FolderController {
     }
 
 
+    @GetMapping("/app/folder/ls/{folderName}")
+    public ResponseEntity<CustomResponse> listFilesInFolder(@PathVariable("folderName") String folderName){
+
+        CustomResponse responseToRequest = folderService.listContentsInFolder(folderName);
+
+        HttpStatus statusOfRequest = (responseToRequest instanceof FailureResponse) ? HttpStatus.NOT_FOUND : HttpStatus.OK;
+
+        return ResponseEntity.status(statusOfRequest).body(responseToRequest);
+    }
+
+
 }

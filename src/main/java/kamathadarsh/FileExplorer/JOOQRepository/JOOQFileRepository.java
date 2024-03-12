@@ -44,10 +44,22 @@ public class JOOQFileRepository {
                 .set(FILE_TABLE.PARENT_FOLDER_ID, FolderService.currentFolderId)
                 .set(FILE_TABLE.PATH, "///")
                 .set(FILE_TABLE.FILE_SIZE, 0L)
+                .set(FILE_TABLE.FILE_DATA, createFileRequest.getFileData())
                 .set(FILE_TABLE.IN_RECYCLE_BIN, "F")
                 .set(FILE_TABLE.OWNER, ownerUsername)
                 .execute();
 
+    }
+
+
+    public String getFileData(String fileName, int parentFolderId){
+
+
+        return dslContext.select(FILE_TABLE.FILE_DATA)
+                .from(FILE_TABLE)
+                .where(FILE_TABLE.FILE_NAME.eq(fileName))
+                .and(FILE_TABLE.PARENT_FOLDER_ID.eq(parentFolderId))
+                .fetchOneInto(String.class);
     }
 
 

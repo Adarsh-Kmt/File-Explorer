@@ -11,4 +11,5 @@ public class CreateFileRequest {
 
     public String fileName;
     public String filePermissions;
+    public String fileData;
 }

@@ -27,10 +27,11 @@ public class FileController {
         return ResponseEntity.status(statusOfRequest).body(responseToRequest);
     }
 
-    @GetMapping("/app/file/readFile/{fileName}")
-    public ResponseEntity<CustomResponse> readFile(@PathVariable("fileName") String fileName){
+    @GetMapping("/app/file/readFile/{fileName}/folder/{folderName}")
+    public ResponseEntity<CustomResponse> readFile(@PathVariable("fileName") String fileName,
+                                                   @PathVariable("folderName") String folderName){
 
-        CustomResponse responseToRequest = fileService.readFile(fileName);
+        CustomResponse responseToRequest = fileService.readFile(fileName, folderName);
 
         System.out.println(responseToRequest.toString());
         HttpStatus statusOfRequest = (responseToRequest instanceof FailureResponse) ? HttpStatus.FORBIDDEN: HttpStatus.OK;
@@ -38,10 +39,11 @@ public class FileController {
         return ResponseEntity.status(statusOfRequest).body(responseToRequest);
     }
 
-    @DeleteMapping("/app/file/deleteFile/{fileName}")
-    public ResponseEntity<CustomResponse> deleteFile(@PathVariable("fileName") String fileName){
+    @DeleteMapping("/app/file/deleteFile/{fileName}/folder/{folderName}")
+    public ResponseEntity<CustomResponse> deleteFile(@PathVariable("fileName") String fileName,
+                                                     @PathVariable("folderName") String folderName){
 
-        CustomResponse responseToRequest = fileService.deleteFile(fileName);
+        CustomResponse responseToRequest = fileService.deleteFile(fileName, folderName);
 
         HttpStatus statusOfRequest = (responseToRequest instanceof FailureResponse) ? HttpStatus.FORBIDDEN: HttpStatus.OK;
 

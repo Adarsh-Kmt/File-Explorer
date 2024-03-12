@@ -58,37 +58,30 @@ public class FileService {
                 .build();
     }
 
-    public CustomResponse readFile(String fileName){
+    public CustomResponse checkPermissions(String fileName, char operation, int parentFolderId){
 
-        boolean fileExists = fileRepository.checkIfFileExistsInCurrentFolder(fileName, FolderService.currentFolderId);
+        String filePermissions = fileRepository.getFilePermissions(fileName, parentFolderId);
 
-        if(!fileExists){
-
-            return FailureResponse.builder()
-                    .errorString("file: " + fileName + " not found in current folder.")
-                    .errorStatus(HttpStatus.NOT_FOUND)
-                    .build();
-        }
-
-        String filePermissions = fileRepository.getFilePermissions(fileName, FolderService.currentFolderId);
-
-        String ownerUsername = fileRepository.getFileOwnerUsername(fileName, FolderService.currentFolderId);
+        String ownerUsername = fileRepository.getFileOwnerUsername(fileName, parentFolderId);
 
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
+        int permissionIndex = 0;
+        if(operation == 'w') permissionIndex++;
+        else if(operation == 'x') permissionIndex += 2;
         if(currentUser.equals(ownerUsername)){
 
-            if(filePermissions.charAt(0) == 'r'){
+            if(filePermissions.charAt(permissionIndex) == operation){
 
                 return SuccessResponse.builder()
-                        .successMessage("reading....")
+                        .successMessage("you are authorized to perform this operation.")
                         .httpStatus(HttpStatus.OK)
                         .build();
             }
             else{
 
                 return FailureResponse.builder()
-                        .errorString("you are not authorized to read this file")
+                        .errorString("you are not authorized to perform this operation")
                         .errorStatus(HttpStatus.FORBIDDEN)
                         .build();
             }
@@ -107,10 +100,10 @@ public class FileService {
 
         if(currentUserGroup.equals(ownerGroup)){
 
-            if(filePermissions.charAt(3) == 'r'){
+            if(filePermissions.charAt(permissionIndex+3) == operation){
 
                 return SuccessResponse.builder()
-                        .successMessage("reading....")
+                        .successMessage("you are authorized to perform this operation.")
                         .httpStatus(HttpStatus.OK)
                         .build();
             }
@@ -118,15 +111,15 @@ public class FileService {
             else{
 
                 return FailureResponse.builder()
-                        .errorString("you are not authorized to read this file")
+                        .errorString("you are not authorized to perform this operation")
                         .errorStatus(HttpStatus.FORBIDDEN)
                         .build();
             }
         }
 
-        if(filePermissions.charAt(6) == 'r'){
+        if(filePermissions.charAt(permissionIndex+6) == operation){
             return SuccessResponse.builder()
-                    .successMessage("reading....")
+                    .successMessage("you are authorized to perform this operation.")
                     .httpStatus(HttpStatus.OK)
                     .build();
 
@@ -135,20 +128,77 @@ public class FileService {
         else{
 
             return FailureResponse.builder()
-                    .errorString("you are not authorized to read this file")
+                    .errorString("you are not authorized to perform this operation")
                     .errorStatus(HttpStatus.FORBIDDEN)
                     .build();
         }
 
 
 
+    }
+    public CustomResponse readFile(String fileName, String folderName){
+
+
+        Optional<Integer> folderExists = folderRepository.findFolder(folderName);
+
+        if(folderExists.isEmpty()){
+
+            return FailureResponse.builder()
+                    .errorString("file: " + fileName + " not found in current folder.")
+                    .errorStatus(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+
+        int folderId = folderExists.get();
+
+        boolean fileExists = fileRepository.checkIfFileExistsInCurrentFolder(fileName, folderId);
+
+        if(!fileExists){
+
+            return FailureResponse.builder()
+                    .errorString("file " + fileName + " not found in folder " + folderName)
+                    .errorStatus(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+
+
+        CustomResponse checkFileReadPermissions = checkPermissions(fileName, 'r', folderId);
+
+        if(checkFileReadPermissions instanceof FailureResponse){
+
+            return FailureResponse.builder()
+                    .errorString("you are not authorized to read this file")
+                    .errorStatus(HttpStatus.FORBIDDEN)
+                    .build();
+        }
+
+        String fileData = fileRepository.getFileData(fileName, folderId);
+
+
+        return SuccessResponse.builder()
+                .successMessage(fileData)
+                .httpStatus(HttpStatus.OK)
+                .build();
+
 
     }
 
 
-    public CustomResponse deleteFile(String fileName){
+    public CustomResponse deleteFile(String fileName, String folderName){
 
-        boolean fileExists = fileRepository.checkIfFileExistsInCurrentFolder(fileName, FolderService.currentFolderId);
+        Optional<Integer> folderExists = folderRepository.findFolder(folderName);
+
+        if(folderExists.isEmpty()){
+
+            return FailureResponse.builder()
+                    .errorString("file: " + fileName + " not found in current folder.")
+                    .errorStatus(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+
+        int folderId = folderExists.get();
+
+        boolean fileExists = fileRepository.checkIfFileExistsInCurrentFolder(fileName, folderId);
 
         if(!fileExists){
 
@@ -158,29 +208,21 @@ public class FileService {
                     .build();
         }
 
-        String ownerUsername = fileRepository.getFileOwnerUsername(fileName, FolderService.currentFolderId);
+        CustomResponse hasPermissionToDelete = checkPermissions(fileName, 'w', folderId);
 
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        if(currentUser.equals(ownerUsername)){
-
-            fileRepository.deleteFileInFolder(fileName, FolderService.currentFolderId);
-
-            return SuccessResponse.builder()
-                    .successMessage("file has been successfully deleted.")
-                    .build();
-        }
-
-        else{
+        if(hasPermissionToDelete instanceof FailureResponse){
 
             return FailureResponse.builder()
-                    .errorString("you are not authorized to read this file")
                     .errorStatus(HttpStatus.FORBIDDEN)
+                    .errorString("you are not authorized to delete this file")
                     .build();
         }
 
+        fileRepository.deleteFileInFolder(fileName, FolderService.currentFolderId);
 
-
+        return FailureResponse.builder()
+                .errorString("file " + fileName + " has been deleted from folder " + folderName)
+                .build();
     }
 
     public CustomResponse getFilePath(String fileName, String folderName){

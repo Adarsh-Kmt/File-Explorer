@@ -26,6 +26,7 @@
 ---
 - Create, read and delete text files.
 - Obtain the absolute file path through Depth First Search within the directory tree structure.
+- Used Basic Authentication, JWT tokens for authorization.
 - Set distinct read, write, and execute permissions for user groups and others.
 - Copy paste files from one folder to another.
 - Seamless creation of nested directories within the file system hierarchy.
